@@ -1,0 +1,6 @@
+<ParameterList name="Ifpack">
+  <Parameter name="Relaxation: type" type="string" value="Gauss-Seidal"/>
+  <Parameter name="Relaxation: sweeps" type="int" value="1"/>
+  <Parameter name="Relaxation: damping factor" type="double" value="0.9"/>
+</ParameterList>
+
