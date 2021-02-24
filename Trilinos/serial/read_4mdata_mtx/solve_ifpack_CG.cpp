@@ -307,14 +307,15 @@ int main (int argc, char *argv[])
   std::string prectype;
   myfile >>  prectype ; 
 
-  std::string ifpack2par="ifpackpre.xml";
+//  std::string ifpack2par="ifpackpre.xml";
 
 Ifpack2::Factory factory;
 //DIAGONAL", "RELAXATION", "CHEBYSHEV", "ILUT", "RILUK"
 //RCP<prec_type> ifpack2Preconditioner = factory.create<crs_matrix_type> ("CHEBYSHEV", A);
 RCP<prec_type> ifpack2Preconditioner = factory.create<sparse_mat_type> (prectype, A);
 //ifpack2Preconditioner->setParameters( paramList );
-ifpack2Preconditioner->setParameters( ifpack2par);
+ifpack2Preconditioner->setParameters(relaxation: type, "Symmetric Gauss-Seidel");
+//ifpack2Preconditioner->setParameters( ifpack2par);
 ifpack2Preconditioner->initialize();
 ifpack2Preconditioner->compute();
 //
