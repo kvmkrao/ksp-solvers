@@ -13,6 +13,9 @@
 # install blas lapack (ubuntu)
 #sudo apt-get install libblas-dev liblapack-dev
 
+#install metis and parmetis 
+#sudo apt-get install  libmetis-dev libparmetis-dev
+
 
 # Modify these paths for your system.
 HOME=/home/drt/
