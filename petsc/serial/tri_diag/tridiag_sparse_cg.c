@@ -99,8 +99,19 @@ int main(int argc,char **args)
 //  istart = start; if (start == 0) istart = 1;
 //  iend = end;     if (end == n-1) iend = n-2;
 
+
   value[0] = -1.0; value[1] = 2.0; value[2] = -1.0;
-  for (i=istart; i<iend; i++) { /* each processor generates some of the matrix values */
+  for (i=1; i<n-1; i++) {
+    col[0] = i-1; col[1] = i; col[2] = i+1;
+    ierr   = MatSetValues(A,1,&i,3,col,value,INSERT_VALUES);CHKERRQ(ierr);
+  }
+  i    = n - 1; col[0] = n - 2; col[1] = n - 1;
+  ierr = MatSetValues(A,1,&i,2,col,value,INSERT_VALUES);CHKERRQ(ierr);
+  i    = 0; col[0] = 0; col[1] = 1; value[0] = 2.0; value[1] = -1.0;
+  ierr = MatSetValues(A,1,&i,2,col,value,INSERT_VALUES);CHKERRQ(ierr);
+
+/*
+  for (i=istart; i<iend; i++) { // each processor generates some of the matrix values 
      col[0] = i-1; col[1] = i; col[2] = i+1;
      if(i==0) {
 	 MatSetValues(A,1,&i,2,col+1,value+1,INSERT_VALUES);
@@ -113,6 +124,7 @@ int main(int argc,char **args)
      //printf("%d %d %d %d %g %g\n",  rank, i, col[0], col[1],value[0],value[1]);
      }
   }
+*/
 
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
