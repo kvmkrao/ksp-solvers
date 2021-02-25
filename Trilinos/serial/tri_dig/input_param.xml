@@ -35,8 +35,9 @@
 <Parameter name="NODESI" type="int" value="1"/>
 <Parameter name="NODESJ" type="int" value="1"/>
 <Parameter name="NODESK" type="int" value="2"/>
-<Parameter name="Solver" type="string" value="BICG"/>
+<Parameter name="Solver" type="string" value="GMRES"/>
 <Parameter name="Precond" type="bool" value="true"/>
+<Parameter name="Precond_type" type="string" value="RELAXATION"/>
 <Parameter name="Orthogonal" type="string" value="ICGS"/>
 <Parameter name="cuda_device" type="int" value="2"/>
 </ParameterList>
