@@ -5,7 +5,7 @@
 #include <Teuchos_TimeMonitor.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 #include <iostream>
-
+#include <fstream> 
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Map.hpp>
 #include <Tpetra_MultiVector.hpp>
@@ -57,6 +57,7 @@
 #include <BelosLSQRSolMgr.hpp> 
 #include "Teuchos_XMLParameterListHelpers.hpp"
 
+
 int main(int argc, char* argv[])
 {
 
@@ -106,7 +107,7 @@ int main(int argc, char* argv[])
   using Teuchos::parameterList;
   using Teuchos::Time;
   using Teuchos::TimeMonitor;
-
+  using namespace std;  
   using Teuchos::updateParametersFromXmlFile;
   using Teuchos::updateParametersFromXmlString; 
   typedef Tpetra::CrsMatrix<> crs_matrix_type;
@@ -126,6 +127,7 @@ int main(int argc, char* argv[])
 
   const int myRank = comm->getRank ();
   const int numProcs = comm->getSize ();
+  
 
   RCP<Time> insertva     = TimeMonitor::getNewCounter ("InsertValues ");
   RCP<Time> FillTimer    = TimeMonitor::getNewCounter ("FillComplete A");
@@ -136,10 +138,17 @@ int main(int argc, char* argv[])
   std::ostream &out = std::cout;
   RCP<Teuchos::FancyOStream> fos = Teuchos::fancyOStream(Teuchos::rcpFromRef(out));
 
-  const global_size_t numGlobalElements = 10000;  // 50;
 
-  const int nrows = numGlobalElements/numProcs; 
-  size_t numMyElements = 10000 ; //map->getNodeNumElements ();
+  std::string inputFile="input_param.xml";
+  int nn; 
+  RCP<Teuchos::ParameterList> myParams = rcp(new Teuchos::ParameterList());
+  Teuchos::updateParametersFromXmlFile(inputFile, myParams.ptr());
+  nn = myParams->get<int>("rows");
+
+  const global_size_t numGlobalElements = nn;  // 50;
+
+  const int nrows = numGlobalElements; //numProcs; 
+  size_t numMyElements = nn ; //map->getNodeNumElements ();
 
   /*
   if(myRank == numProcs-1) {
@@ -241,11 +250,12 @@ int main(int argc, char* argv[])
    RCP<multivector_type> x = rcp(new multivector_type(map,1));
    RCP<multivector_type> b = rcp(new multivector_type(map,1));
 
-//   b->putScalar(1.0);
-//   b->(STS::one ());
-  b->randomize();
+   x->putScalar (0.5*STS::one ());
+   b->putScalar (STS::one ());
+//  b->randomize();
 
-/*
+
+/*   
    for (LO lclRow = 0; lclRow < static_cast<LO> (numMyElements);++lclRow) {
     const GO gblRow = map->getGlobalElement (lclRow);
     b->sumIntoGlobalValue(gblRow, 0, bo[lclRow]);
@@ -287,11 +297,8 @@ int main(int argc, char* argv[])
   //  belosList->set("Implicit Residual Scaling", "None");
   RCP<belos_solver_manager_type> solver;
   
-  std::string inputFile="input_param.xml";
   std::string vname; 
   bool prec;
-  RCP<Teuchos::ParameterList> myParams = rcp(new Teuchos::ParameterList());
-  Teuchos::updateParametersFromXmlFile(inputFile, myParams.ptr());
   vname = myParams->get<std::string>("Solver");
   prec  = myParams->get<bool>("Precond");
   

@@ -1,5 +1,6 @@
 <ParameterList>
 <Parameter name="KEY_EXIT" type="int" value="1"/>
+<Parameter name="rows" type="int" value="50000"/>
 <Parameter name="LEQ_METHOD(1)" type="int" value="6"/>
 <Parameter name="LEQ_METHOD(2)" type="int" value="2"/>
 <Parameter name="LEQ_METHOD(3)" type="int" value="2"/>
@@ -34,7 +35,7 @@
 <Parameter name="NODESI" type="int" value="1"/>
 <Parameter name="NODESJ" type="int" value="1"/>
 <Parameter name="NODESK" type="int" value="2"/>
-<Parameter name="Solver" type="string" value="BiCGStab"/>
+<Parameter name="Solver" type="string" value="BICG"/>
 <Parameter name="Precond" type="bool" value="true"/>
 <Parameter name="Orthogonal" type="string" value="ICGS"/>
 <Parameter name="cuda_device" type="int" value="2"/>
