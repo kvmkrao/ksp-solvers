@@ -1,5 +1,8 @@
 # ksp-solvers
 
+```
 Krylov subspace solvers in 
-Trilonos 
-PETSc 
+Trilonos, 
+PETSc, and 
+scipy
+```
