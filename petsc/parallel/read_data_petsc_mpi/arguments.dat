@@ -1,0 +1,1 @@
+-ksp_max_it 50000 -ksp_rtol 1e-6 -log_view > run_petsc_serial_cg.out 2>&1

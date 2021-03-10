@@ -1,0 +1,56 @@
+BCGS
+ILU
+JACOBI
+
+
+   "GMRES")  KSPSetType(ksp,KSPGMRES);
+   "CG")     KSPSetType(ksp,KSPCG);
+   "BICGS")  KSPSetType(ksp,KSPBICG);
+   "BICGS")  KSPSetType(ksp,KSPBCGS);
+    if(prcd == "JACOBI") ierr = PCSetType(pc,PCJACOBI);
+    if(prcd == "SOR")    ierr = PCSetType(pc,PCSOR);
+    if(prcd == "NONE")   ierr = PCSetType(pc,PCNONE);
+    if(prcd == "ILU")    ierr = PCSetType(pc,PCILU);
+
+
+https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/index.html
+#Beginner    - solvers  
+#KSP			KSPGCR				KSPSetComputeRHS
+#SPAGMRES		KSPGMRES			KSPSetFromOptions
+#KSPBCGS		KSPGuess			KSPSetInitialGuessNonzero
+#KSPBCGSL		KSPGuessCreate			KSPSetOperators
+#KSPBICG		KSPGuessDestroy			KSPSolve
+#KSPCG			KSPGuessType			KSPTCQMR
+#KSPCGLS		KSPIBCGS			KSPTFQMR
+#KSPCGNE		KSPLCD				KSPType
+#KSPCGS			KSPLGMRES			KSPView
+#KSPCGType		KSPLSQR				KSP_CONVERGED_ATOL
+#KSPCHEBYSHEV		KSPMINRES			KSP_CONVERGED_ITERATING
+#KSPCR			KSPMonitorSet			KSP_CONVERGED_ITS
+#KSPConvergedReason	KSPPGMRES			KSP_CONVERGED_RTOL
+#KSPConvergedReasonView	KSPPREONLY			KSP_DIVERGED_BREAKDOWN
+#KSPCreate		KSPRICHARDSON			KSP_DIVERGED_BREAKDOWN_BICG
+#KSPDGMRES		KSPReset			KSP_DIVERGED_DTOL
+#KSPDestroy		KSPResetFromOptions		KSP_DIVERGED_INDEFINITE_PC
+#KSPFBCGS		KSPResetViewers			KSP_DIVERGED_ITS
+#KSPFBCGSR		KSPSYMMLQ			KSP_DIVERGED_NONSYMMETRIC
+#KSPFCG			KSPSetComputeInitialGuess 	KSP_DIVERGED_PC_FAILED
+#KSPFGMRES		KSPSetComputeOperators		MatLMVMSetHistorySize
+
+https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/index.html
+
+PC		        	PCHMG				PCMGCycleType
+PCASM		        	PCHMGSetCoarseningComponent	PCMGType
+PCASMType	        	PCHMGSetInnerPCType		PCMGalerkinType
+PCBJACOBI	        	PCHMGSetReuseInterpolation	PCNONE
+PCCHOLESKY	        	PCHMGSetUseSubspaceCoarsening	PCPBJACOBI
+PCCompositeType	        	PCHMGUseMatMAIJ			PCPatchConstructType
+PCEISENSTAT	        	PCICC				PCSOR
+PCExoticType	        	PCILU				PCSPAI
+PCFailedReason	        	PCJACOBI			PCSide
+PCGASM		        	PCKaczmarz			PCTFS
+PCGASMSetTotalSubdomains	PCLU				PCType
+PCGASMType			PCMGCoarseSpaceType		PCVPBJACOBI
+
+
+
