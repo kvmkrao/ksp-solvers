@@ -1,6 +1,8 @@
 
 /* Author: VMK Kotteda
- * date  : Feb 18, 2021 */
+ * date  : Feb 24, 2021 
+ * mpirun -np 32  ./petscsol_rel.exe  -nx 1000 -ny 1000 -nz 5 -ksp_atol  1e-06   -ksp_rtol  1e-10 -ksp_type cg -pc_type hypre   -ksp_monitor_short  */
+
 #include <iostream>
 #include <fstream>
 //#include <cstdlib>
@@ -27,10 +29,10 @@ int main(int argc,char **args)
   PC             pc;               /* preconditioner context */
   PetscReal      norm,tol=1000.*PETSC_MACHINE_EPSILON;  /* norm of solution error */
   PetscErrorCode ierr;
-  PetscInt       i,j,n,nx,ny,col[5],its,rstart,rend,nlocal;
+  PetscInt       i,j,n,nx,ny,nz,col[7],its,rstart,rend,nlocal;
   PetscInt       start, end,rank,size,irow,icol;
   PetscInt       istart, iend;
-  PetscScalar    value[5],val1,rhs1;
+  PetscScalar    value[7],val1,rhs1;
   PetscScalar    one = 1.0; 
   PetscInt       numiter =10,nnz=0; 
 //  PetscInt       d_nnz[n];
@@ -57,6 +59,7 @@ int main(int argc,char **args)
 
   ierr = PetscOptionsGetInt(NULL,NULL,"-nx",&nx,NULL);CHKERRQ(ierr);
   ierr = PetscOptionsGetInt(NULL,NULL,"-ny",&ny,NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetInt(NULL,NULL,"-nz",&nz,NULL);CHKERRQ(ierr);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     Compute the matrix and right-hand-side vector that define
@@ -114,15 +117,15 @@ int main(int argc,char **args)
      We pass in nlocal as the "local" size of the matrix to force it
      to have the same parallel layout as the vector created above.
   */
-   n = nx * ny; 
+   n = nx * ny* nz; 
   ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
   ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);CHKERRQ(ierr);
 //  ierr = MatSetSizes(A,nlocal,nlocal,n,n);CHKERRQ(ierr);
   ierr = MatSetType(A,MATAIJ);CHKERRQ(ierr);
   ierr = MatSetFromOptions(A);CHKERRQ(ierr);
 
-  ierr = MatMPIAIJSetPreallocation(A,5,NULL,5,NULL);CHKERRQ(ierr);
-  ierr = MatSeqAIJSetPreallocation(A,5,NULL);CHKERRQ(ierr);
+  ierr = MatMPIAIJSetPreallocation(A,7,NULL,7,NULL);CHKERRQ(ierr);
+  ierr = MatSeqAIJSetPreallocation(A,7,NULL);CHKERRQ(ierr);
 /*  
   ierr = MatSeqSBAIJSetPreallocation(A,1,d_nnz,NULL);CHKERRQ(ierr);
   ierr = MatMPISBAIJSetPreallocation(A,1,d_nnz,NULL,d_nnz,NULL);CHKERRQ(ierr);
@@ -142,7 +145,7 @@ int main(int argc,char **args)
      the part that it owns locally.
   */
 
-  printf("%d %d %d %d %d \n",rank, start, end, nx, ny, n);
+  printf("%d %d %d %d %d %d\n",rank, start, end, nx, ny, nz, n);
 
   std::clock_t c_start1 = std::clock();
 //  ifstream matfile;
@@ -155,33 +158,47 @@ int main(int argc,char **args)
   
 
   for (i=start; i<end; i++) {
-    nnz = 0;
+    nnz        = 0;
     col[nnz]   = i; 
     value[nnz] = 4.0; 
 
+    if((i-nz)>=0) {
+      nnz        = nnz + 1;
+      col[nnz]   = i-nz;
+      value[nnz] = -1.0;
+    }
+
+
     if((i-ny)>=0) {
-      nnz = nnz + 1; 
+      nnz        = nnz + 1; 
       col[nnz]   = i-ny;   
       value[nnz] = -1.0;
     }
 
     if((i-1)>=0 ) {
-      nnz = nnz+1 ;
+      nnz        = nnz+1 ;
       col[nnz]   = i-1;
       value[nnz] = -1.0;
     }
     
-    if((i+1)<=n ) {
-      nnz = nnz+1 ;
+    if((i+1)<=n-1 ) {
+      nnz        = nnz+1 ;
       col[nnz]   = i+1;
       value[nnz] = -1.0;
     }
 
-    if((i+ny)<=n) {
-      nnz = nnz + 1;
+    if((i+ny)<=n-1) {
+      nnz        = nnz + 1;
       col[nnz]   = i+ny;
       value[nnz] = -1.0;
     }
+    
+    if((i+nz)<=n-1) {
+      nnz        = nnz + 1;
+      col[nnz]   = i+nz;
+      value[nnz] = -1.0;
+    }
+
     ierr = MatSetValues(A,1,&i,nnz+1,col,value,INSERT_VALUES);CHKERRQ(ierr);
     }
 
@@ -204,7 +221,11 @@ int main(int argc,char **args)
 
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-  ierr = MatSetOption(A,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);CHKERRQ(ierr);
+ 
+    /*
+       Indicate same nonzero structure of successive linear system matrices
+    */
+  ierr = MatSetOption(A,MAT_NEW_NONZERO_LOCATIONS,PETSC_TRUE);CHKERRQ(ierr);
   std::clock_t c_start2 = std::clock();
 //  PetscBarrier((PetscObject) A);
   /* create vectors */
@@ -339,18 +360,73 @@ int main(int argc,char **args)
     ierr = KSPSolve(ksp,b,x);CHKERRQ(ierr);
     std::clock_t c_start5 = std::clock();
 
-    /*
-  for(int j=0; j<numiter; j++) { 
-    std::clock_t c_start5 = std::clock();
-    PetscScalar one=1.0;
-    PetscInt    i = j;
-    
-    // resume fill 
-    MatZeroEntries(Mat A);
-    // allow making changes to memory size and new non-zero values 
-    MatSetOption(Mat A,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE); 
 
-    ierr = MatSetValues(A,1,&i,1,&i,&one,ADD_VALUES);CHKERRQ(ierr);
+  for(int j=1; j<3; j++) { 
+    std::clock_t c_start5 = std::clock();
+    // resume fill
+
+    /*
+     Initialize all matrix entries to zero.  MatZeroEntries() retains the
+     nonzero structure of the matrix for sparse formats.
+    */
+    ierr = MatZeroEntries(A);CHKERRQ(ierr);
+
+    // allow making changes to memory size and new non-zero values 
+
+    if(j==1) {
+      for(i=start; i<end; i++) {
+        nnz = 0;
+        col[nnz]   = i;
+        value[nnz] = 4.0;
+  
+        if((i-ny)>=0) {
+          nnz = nnz + 1;
+          col[nnz]   = i-ny;
+          value[nnz] = -1.0;
+        }
+  
+        if((i-1)>=0 ) {
+          nnz = nnz+1 ;
+          col[nnz]   = i-1;
+          value[nnz] = -1.0;
+        }
+  
+        if((i+1)<=n-1 ) {
+          nnz = nnz+1 ;
+          col[nnz]   = i+1;
+          value[nnz] = -1.0;
+        }
+  
+        if((i+ny)<=n-1) {
+          nnz = nnz + 1;
+          col[nnz]   = i+ny;
+          value[nnz] = -1.0;
+        }
+  
+        ierr = MatSetValues(A,1,&i,nnz+1,col,value,INSERT_VALUES);CHKERRQ(ierr);
+        }
+    }
+    else if (j==2) {
+      for(i=start; i<end; i++) {
+        nnz = 0;   
+        col[nnz]   = i;
+        value[nnz] = 4.0;
+
+        if((i-1)>=0 ) {
+          nnz = nnz+1 ;
+          col[nnz]   = i-1;
+          value[nnz] = -1.0;
+        }
+
+        if((i+1)<=n-1 ) {
+          nnz = nnz+1 ;
+          col[nnz]   = i+1;
+          value[nnz] = -1.0;
+        }
+        ierr = MatSetValues(A,1,&i,nnz+1,col,value,INSERT_VALUES);CHKERRQ(ierr);
+      }
+    }
+
     ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
     ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
     std::clock_t c_start6 = std::clock();
@@ -359,20 +435,25 @@ int main(int argc,char **args)
 
     // Solve the linear system //
     std::clock_t c_start7 = std::clock();
+    /*
+       Use the previous solution of linear system #1 as the initial
+       guess for the next solve of linear system #1.  The user MUST
+       call KSPSetInitialGuessNonzero() in indicate use of an initial
+       guess vector; otherwise, an initial guess of zero is used.
+    */
+      ierr = KSPSetInitialGuessNonzero(ksp,PETSC_FLASE);CHKERRQ(ierr);
+
+
     ierr = KSPSolve(ksp,b,x);CHKERRQ(ierr);
     std::clock_t c_start8 = std::clock();
-    if(rank==0) std::cout << "loop: j " << j <<"setup matrix "<< (double)(c_start6 - c_start5)/CLOCKS_PER_SEC << std::endl;
+    if(rank==0) std::cout << "loop: j " << j <<"fill matrix "<< (double)(c_start6 - c_start5)/CLOCKS_PER_SEC << std::endl;
     if(rank==0) std::cout << "loop: j " << j <<"linear solver "<< (double)(c_start8 - c_start7)/CLOCKS_PER_SEC << std::endl;
     // Check the solution and clean up //
-    ierr = VecAXPY(x,-1.0,u);CHKERRQ(ierr);
-    ierr = VecNorm(x,NORM_2,&norm);CHKERRQ(ierr);
     ierr = KSPGetIterationNumber(ksp,&its);CHKERRQ(ierr);
  //   if (norm > 100*PETSC_MACHINE_EPSILON) {
     if(rank==0) PetscPrintf(PETSC_COMM_WORLD,"Norm of error %g, Iterations %D\n",(double)norm,its);
 //    }
   }
-*/
-
 
    /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                        Solve the linear system
