@@ -3,6 +3,7 @@
 ```
 Krylov subspace solvers and preconditioners in 
 Trilonos, 
-PETSc, and 
+PETSc, 
+AmgX, and 
 scipy
 ```
